@@ -90,23 +90,27 @@ void sqrt_method() {
     ofstream f;
     f.open("sqrt_method.txt");
     int n, m;
-    n = 4;
+    n = 2;
+
     m = n + 1;                      //Расширенная матрица
-    double** A = new double* [n + 1]; //Выделяем память под строки
-    for (int i = 1; i <= n; i++)
-        A[i] = new double[m + 1];     //Под столбцы
-    for (int i = 1; i <= n; i++) {
-        for (int j = 1; j <= m; j++) {
+    //double** A = new double* [n + 1]; //Выделяем память под строки
+    //for (int i = 1; i <= n; i++)
+    //    A[i] = new double[m + 1];     //Под столбцы
+    vector <vector <double>> A(n + 1);
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < m; j++) {
+            int a;
             cout << "A[" << i << "][" << j << "] = ";
-            cin >> A[i][j];
+            cin >> a;
+            A[i].push_back(a);
         }
     }
 
     //Вывод на экран
     f << "Матрица A: " << endl;
-    for (int i = 1; i <= n; i++) {
-        for (int j = 1; j <= m; j++) {
-            if (j == m) f << "|";
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < m; j++) {
+            if (j == m - 1) f << "|";
             f.width(13);
             f << A[i][j] << " ";
         }
@@ -117,20 +121,20 @@ void sqrt_method() {
     /*    A = S*DS,
           S — верхняя треугольная матрица с положительными элементами на главной диагонали,
           S*— транспонированная матрица S,
-          D — диагональная матрица, на диагонали которой находятся числа, равные ± 1
-                                                                                                 */
-    double** S = new double* [n + 1]; //Выделяем память под строки
-    for (int i = 1; i <= n; i++)
-        S[i] = new double[m + 1];  //Описываем матрицу S
-    double** D = new double* [n + 1]; //Выделяем память под строки
-    for (int i = 1; i <= n; i++)
-        D[i] = new double[m + 1];//Описываем матрицу D
+          D — диагональная матрица, на диагонали которой находятся числа, равные ± 1*/
+    vector <vector <double>> S(n + 1), D(n + 1);
+    for (int i = 0; i < n + 1; i++) {
+        for (int j = 0; j < n + 1; j++) {
+            S[i].push_back(0);
+            D[i].push_back(0);
+        }
+    }
 
 /*------------------------Инициализация первых элементов матриц S и D------------------------*/
-    S[1][1] = sqrt(abs(A[1][1]));
-    D[1][1] = sign(A[1][1]);
-    for (int j = 2; j <= n; ++j) {
-        S[1][j] = A[1][j] / (S[1][1] * D[1][1]);
+    S[0][0] = sqrt(abs(A[0][0]));
+    D[0][0] = sign(A[0][0]);
+    for (int j = 1; j < n; ++j) {
+        S[0][j] = A[0][j] / (S[0][0] * D[0][0]);
     }
     /*Все элементы матрицы S считаются по следующей схеме:
        s[i,j]= (A[i,j] - sum(от l=1 до l=i-1)(s[l,i]*s[l,j]*D[l,l]))/s[i,i]*D[i,i]
@@ -139,15 +143,15 @@ void sqrt_method() {
     /*------------------------  Инициализация первых элементов матриц S и D------------------------*/
 
     /*------------------------Расчитывамем все оставшиеся значения S и D------------------------*/
-    for (int i = 2; i <= n; ++i) {
+    for (int i = 1; i < n; ++i) {
         double sum = 0;
-        for (int l = 1; l <= i - 1; ++l)
+        for (int l = 0; l < i - 1; ++l)
             sum = sum + S[l][i] * S[l][i] * D[l][l];
         S[i][i] = sqrt(abs(A[i][i] - sum));
         D[i][i] = sign(A[i][i] - sum);
-        for (int j = i + 1; j <= n; ++j) {
+        for (int j = i; j < n; ++j) {
             sum = 0;
-            for (int l = 1; l <= i - 1; l++) {
+            for (int l = 0; l < i - 1; l++) {
                 sum = sum + S[l][i] * S[l][j] * D[l][l];
             }
             S[i][j] = (A[i][j] - sum) / (S[i][i] * D[i][i]);
@@ -162,18 +166,18 @@ void sqrt_method() {
         цифр с ошибкой вычисления                                                       */
 
     f << "Главная диагональ матрицы D:" << endl;
-    for (int i = 1; i <= n; i++)
-        for (int j = 1; j <= n; j++)
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++)
             if (abs(S[i][j]) < 0.000001) S[i][j] = 0;
 
-    for (int i = 1; i <= n; i++) {
+    for (int i = 0; i < n; i++) {
         f.width(13);
         f << D[i][i] << " ";
     }
     f << endl;
     f << "Полученная матрица S:" << endl;
-    for (int i = 1; i <= n; i++) {
-        for (int j = 1; j <= n; j++) {
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
             f.width(13);
             f << S[i][j] << " ";
         }
@@ -197,17 +201,17 @@ void sqrt_method() {
    в нашем случае это переменная вида A[i,m], где m это последний стобец матрицы
     Формула для нахождения y[i]
     y[i] = (f[i] - sum(от l=1 до l=i-1)(s[l,i]*y[l]))/s[i,i], где i = 2,3,..,m*/
-    double* y = new double [n + 1]; //Выделяем память под строки
-
-    y[1] = A[1][m] / S[1][1] * D[1][1];        //y[1] всегда равен f[1]/s[1,1]
-    for (int i = 2; i <= n; ++i) {
+    
+    vector <double> y(n + 1);
+    y.push_back(A[0][m - 1] / S[0][0] * D[0][0]);        //y[1] всегда равен f[1]/s[1,1]
+    for (int i = 1; i < n; ++i) {
         double sum = 0;
-        for (int l = 1; l <= i - 1; ++l)
+        for (int l = 0; l < i - 1; ++l)
             sum = sum + S[l][i] * y[l] * D[l][l];
-        y[i] = (A[i][m] - sum) / (S[i][i] * D[i][i]);
+        y.push_back((A[i][m - 1] - sum) / (S[i][i] * D[i][i]));
     }
     f << "Вектор y:" << endl;
-    for (int i = 1; i <= n; ++i) {
+    for (int i = 0; i < n; ++i) {
         f.width(13);
         f << y[i] << ' ';
     }
@@ -230,7 +234,7 @@ void sqrt_method() {
 
     //Выводим решения
     f << endl << "Ответ" << endl;
-    for (int i = 1; i <= n; i++) {
+    for (int i = 0; i < n; i++) {
         f.width(13);
         f << x[i] << ' ';
     }
