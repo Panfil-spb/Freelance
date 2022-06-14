@@ -5,272 +5,391 @@
 
 using namespace std;
 
-void LU(vector <vector <double>> A, vector <vector <double>>& L,
-	vector <vector <double>>& U, int n)
+using namespace std;
+// печать матрицы
+void printMatrix(float** matr, int n, ofstream& f);
+// печать вектор-столбца
+void printVectorCol(float* v, int n, ofstream& f);
+//
+float getSumU(int n, int i, int j, float** mL, float** mU);
+//
+float getSumL(int n, int i, int j, float** mL, float** mU);
+// LU-разложение
+void decomp(float** mA, int n, float** mL, float** mU);
+//
+float getSumY(int n, float** mL, float* vB, float* vY, int i);
+//
+float getSumX(int n, float** mU, float* vX, int i);
+// решатель
+void solver(float** mA, int n, float** mL, float** mU, float* vB, float* vY, float* vX);
+
+
+void LU()
 {
-	U = A;
-
-	for (int i = 0; i < n; i++)
-		for (int j = i; j < n; j++)
-			L[j][i] = U[j][i] / U[i][i];
-
-	for (int k = 1; k < n; k++)
-	{
-		for (int i = k - 1; i < n; i++)
-			for (int j = i; j < n; j++)
-				L[j][i] = U[j][i] / U[i][i];
-
-		for (int i = k; i < n; i++)
-			for (int j = k - 1; j < n; j++)
-				U[i][j] = U[i][j] - L[i][k - 1] * U[k - 1][j];
-	}
-
-}
-
-void proisv(vector <vector <double>> A, vector <vector <double>> B,
-	vector <vector <double>>& R, int n)
-{
-	for (int i = 0; i < n; i++)
-		for (int j = 0; j < n; j++)
-			for (int k = 0; k < n; k++)
-				R[i][j] += A[i][k] * B[k][j];
-}
-
-void print_in_file(vector <vector <double>> A, int n, ofstream &f)
-{
-	for (int i = 0; i < n; i++)
-	{
-		for (int j = 0; j < n; j++)
-		{
-			f.width(13);
-			f << A[i][j];
-            cout.width(13);
-            cout << A[i][j];
-		}
-		f << endl;
-        cout << endl;
-	}
-}
-
-void LU_method() {
-	int n;
+    int n; // размерность системы
     cout << "Введите размерность матрицы: ";
     cin >> n;
-	vector <vector <double>> A(n), L(n), U(n), R(n);
-	for (int i = 0; i < n; i++)
-	{
-		for (int j = 0; j < n; j++)
-		{
-			int a;
-			cout << "A[" << i << "][" << j << "] = ";
-			cin >> a;
-			A[i].push_back(a);
-			L[i].push_back(0);
-			U[i].push_back(0);
-			R[i].push_back(0);
-		}
-	}
-	ofstream f;
-	f.open("LU-method.txt");
-	LU(A, L, U, n);
-	f << "Fisrt matrix" << endl;
-    cout << "Fisrt matrix" << endl;
-	print_in_file(A, n, f);
-	f << "U matrix" << endl;
-    cout << "U matrix" << endl;
-	print_in_file(U, n, f);
-	f << "L matrix" << endl;
-    cout << "L matrix" << endl;
-	print_in_file(L, n, f);
-	proisv(L, U, R, n);
-	f << "L*U matrix" << endl;
-    cout << "L*U matrix" << endl;
-	print_in_file(R, n, f);
-    f.close();
-}
+    // динамическое выделение памяти
+    float** matrA = new float* [n];
+    float** matrL = new float* [n];
+    float** matrU = new float* [n];
+    for (int i = 0; i < n; i++)
+    {
+        matrA[i] = new float[n];
+        matrL[i] = new float[n];
+        matrU[i] = new float[n];
+    }
+    float* vB = new float[n];
+    float* vX = new float[n];
+    float* vY = new float[n];
 
-double sign(double x) {
-    if (x == 0.0) return 0;
-    if (x > 0.0) return 1;
-    else return -1;
-}
+    // инициализация матриц и векторов нулями
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            matrA[i][j] = 0;
+            matrL[i][j] = 0;
+            matrU[i][j] = 0;
+        }
 
-void sqrt_method() {
-    ofstream f;
-    f.open("sqrt_method.txt");
-    int n, m;
-    cout << "Введите размерность матрицы: ";
-    cin >> n;
+        vB[i] = 0;
+        vX[i] = 0;
+        vY[i] = 0;
+    }
 
-    m = n + 1;                      //Расширенная матрица
-    //double** A = new double* [n + 1]; //Выделяем память под строки
-    //for (int i = 1; i <= n; i++)
-    //    A[i] = new double[m + 1];     //Под столбцы
-    vector <vector <double>> A(n + 1);
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < m; j++) {
-            int a;
-            cout << "A[" << i << "][" << j << "] = ";
-            cin >> a;
-            A[i].push_back(a);
+    // заполнение матрицы A случайными числами из интервала [1; 100]
+    for (int i = 0; i < n; i++) // по строкам
+    {
+        for (int j = 0; j < n; j++) // по столбцам
+        {
+            cout << "matr[" << i << "][" << j << "] = ";
+            cin >> matrA[i][j];
         }
     }
-    system("cls");
-    //Вывод на экран
-    f << "Матрица A: " << endl;
-    cout << "Матрица A: " << endl;
 
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < m; j++) {
-            if (j == m - 1) f << "|";
+    // задание случайных значений свободных коэффициентов
+    for (int i = 0; i < n; i++)
+    {
+        cout << "vB[" << i << "] = ";
+        cin >> vB[i];
+    }
+
+    /***************************************************************************/
+
+        // LU-разложение
+    decomp(matrA, n, matrL, matrU);
+
+    // решение системы
+    solver(matrA, n, matrL, matrU, vB, vY, vX);
+
+    /***************************************************************************/
+    system("cls");
+        // печать результатов
+    ofstream f;
+    f.open("LU.txt");
+    printf("A = \n");
+    f << "A = " << endl;
+    printMatrix(matrA, n, f);
+    printf("\n");
+    f << endl;
+    f << "B = " << endl;
+    printf("B = \n");
+    printVectorCol(vB, n, f);
+    printf("\n");
+    f << endl;
+    f << "L = " << endl;
+    printf("L = \n");
+    printMatrix(matrL, n, f);
+    printf("\n");
+    f << endl;
+
+    f << "U = " << endl;
+    printf("U = \n");
+    printMatrix(matrU, n, f);
+    printf("\n");
+    f << endl;
+    f << "Y = " << endl;
+    printf("Y = \n");
+    printVectorCol(vY, n, f);
+    printf("\n");
+    f << endl;
+    f << "X = " << endl;
+    printf("X = \n");
+    printVectorCol(vX, n, f);
+    printf("\n");
+    f << endl;
+    f.close();
+    /***************************************************************************/
+
+        // освобождение памяти
+    for (int i = 0; i < n; i++)
+    {
+        delete[] matrA[i];
+        delete[] matrL[i];
+        delete[] matrU[i];
+    }
+    delete[] matrA;
+    delete[] matrL;
+    delete[] matrU;
+    delete[] vB;
+    delete[] vX;
+    delete[] vY;
+
+    printf("\n");
+    system("pause");
+}
+
+// печать матрицы
+void printMatrix(float** matr, int n, ofstream& f)
+{
+    for (int i = 0; i < n; i++) // по строкам
+    {
+        for (int j = 0; j < n; j++) // по столбцам
+        {
             f.width(13);
-            f << A[i][j] << " ";
-            cout.width(13);
-            cout << A[i][j] << " ";
+            f << matr[i][j];
+            printf("%7.3f ", matr[i][j]);
         }
         f << endl;
-        cout << endl;
+        printf("\n"); // новая строка
     }
-    f << endl;
-    cout << endl;
+}
 
-    /*    A = S*DS,
-          S — верхняя треугольная матрица с положительными элементами на главной диагонали,
-          S*— транспонированная матрица S,
-          D — диагональная матрица, на диагонали которой находятся числа, равные ± 1*/
-    vector <vector <double>> S(n + 1), D(n + 1);
-    for (int i = 0; i < n + 1; i++) {
-        for (int j = 0; j < n + 1; j++) {
-            S[i].push_back(0);
-            D[i].push_back(0);
-        }
-    }
-
-/*------------------------Инициализация первых элементов матриц S и D------------------------*/
-    S[0][0] = sqrt(abs(A[0][0]));
-    D[0][0] = sign(A[0][0]);
-    for (int j = 1; j < n; ++j) {
-        S[0][j] = A[0][j] / (S[0][0] * D[0][0]);
-    }
-    /*Все элементы матрицы S считаются по следующей схеме:
-       s[i,j]= (A[i,j] - sum(от l=1 до l=i-1)(s[l,i]*s[l,j]*D[l,l]))/s[i,i]*D[i,i]
-      А все элементы диагональной матрицы D считаются следующим образом:
-       D[i,i]= sign(A[i,j] - sum(от l=1 до l=i-1)(S[l][i] * S[l][i] * D[l][l]
-    /*------------------------  Инициализация первых элементов матриц S и D------------------------*/
-
-    /*------------------------Расчитывамем все оставшиеся значения S и D------------------------*/
-    for (int i = 1; i < n; ++i) {
-        double sum = 0;
-        for (int l = 0; l < i - 1; ++l)
-            sum = sum + S[l][i] * S[l][i] * D[l][l];
-        S[i][i] = sqrt(abs(A[i][i] - sum));
-        D[i][i] = sign(A[i][i] - sum);
-        for (int j = i; j < n; ++j) {
-            sum = 0;
-            for (int l = 0; l < i - 1; l++) {
-                sum = sum + S[l][i] * S[l][j] * D[l][l];
-            }
-            S[i][j] = (A[i][j] - sum) / (S[i][i] * D[i][i]);
-        }
-    }
-    /*------------------------Расчитывамем все оставшиеся значения S и D------------------------*/
-
-    /*Выводим матрицу после прямого хода, чтобы проверить, что она была приведена
-         к ступенчатому виду
-      Так как счет идет с ошибкой вычисления, то для наглядности занулим то,
-       что находится ниже главной диагонали, а также проверим вектор правой части на наличие
-        цифр с ошибкой вычисления                                                       */
-
-    f << "Главная диагональ матрицы D:" << endl;
-    cout << "Главная диагональ матрицы D:" << endl;
+// печать вектор-столбца
+void printVectorCol(float* v, int n, ofstream& f)
+{
     for (int i = 0; i < n; i++)
-        for (int j = 0; j < n; j++)
-            if (abs(S[i][j]) < 0.000001) S[i][j] = 0;
-
-    for (int i = 0; i < n; i++) {
+    {
         f.width(13);
-        f << D[i][i] << " ";
-        cout.width(13);
-        cout << D[i][i] << " ";
+        f << v[i] << endl;
+        printf("%7.3f ", v[i]);
+        printf("\n");
     }
-    f << endl;
-    cout << endl;
-    f << "Полученная матрица S:" << endl;
-    cout << "Полученная матрица S:" << endl;
+}
+
+//
+float getSumU(int n, int i, int j, float** mL, float** mU)
+{
+    float res = 0;
+
+    for (int k = 0; k < i; k++)
+    {
+        res += mL[i][k] * mU[k][j];
+    }
+
+    return res;
+}
+
+//
+float getSumL(int n, int i, int j, float** mL, float** mU)
+{
+    float res = 0;
+
+    for (int k = 0; k < i; k++)
+    {
+        res += mL[j][k] * mU[k][i];
+    }
+
+    return res;
+}
+
+// LU-разложение
+void decomp(float** mA, int n, float** mL, float** mU)
+{
+    // i = 0
+    for (int j = 0; j < n; j++)
+    {
+        mU[0][j] = mA[0][j];
+        mL[j][0] = mA[j][0] / mU[0][0];
+    }
+
+    // i = 1 .. n-1
+    for (int i = 1; i < n; i++)
+    {
+        for (int j = i; j < n; j++)
+        {
+            mU[i][j] = mA[i][j] - getSumU(n, i, j, mL, mU);
+
+            mL[j][i] = (mA[j][i] - getSumL(n, i, j, mL, mU)) / mU[i][i];
+        }
+    }
+}
+
+//
+float getSumY(int n, float** mL, float* vB, float* vY, int i)
+{
+    float res = 0;
+
+    for (int k = 0; k < i; k++)
+    {
+        res += mL[i][k] * vY[k];
+    }
+
+    return res;
+}
+
+//
+float getSumX(int n, float** mU, float* vX, int i)
+{
+    float res = 0;
+
+    for (int k = n - 1; k > i; k--)
+    {
+        res += mU[i][k] * vX[k];
+    }
+
+    return res;
+}
+
+// решатель
+void solver(float** mA, int n, float** mL, float** mU, float* vB, float* vY, float* vX)
+{
+    // Y. Решение прямой подстановкой
+    for (int i = 0; i < n; i++)
+    {
+        vY[i] = (vB[i] - getSumY(n, mL, vB, vY, i)) / mL[i][i];
+    }
+
+    // X. Решение обратной подстановкой
+    for (int i = n - 1; i >= 0; i--)
+    {
+        vX[i] = (vY[i] - getSumX(n, mU, vX, i)) / mU[i][i];
+    }
+}
+
+void print_matr(double** m, int n, ofstream& f) {
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) {
-            f.width(13);
-            f << S[i][j] << " ";
-            cout.width(13);
-            cout << S[i][j] << " ";
+            cout.width(10);
+            cout << m[i][j];
+            f.width(10);
+            f << m[i][j];
         }
         cout << endl;
         f << endl;
     }
-    f << endl;
-    cout << endl;
-
-
-    /*Итак, если после предыдущих действий имеем матрицу S. Чтобы довести решение
-       нам требуется представить исходную матрицу в виде:
-                 A = S*S, где S* - транспонированная матрица S
-      Не будем совершать лишних действий по выделению памяти под новую матрицу,
-       а просто поменяем местами индексы у матрицы S[i,j] местами, это и будет S*.
-                                                                                    */
-
-  /*-------------------------------------Обратный ход-------------------------------------*/
-  /*Обратный ход состоит в в последовательном решении двух систем уравнений
-   (1) S*y = f
-   где f это последний столбец в расширенной матрице (вектор)
-   в нашем случае это переменная вида A[i,m], где m это последний стобец матрицы
-    Формула для нахождения y[i]
-    y[i] = (f[i] - sum(от l=1 до l=i-1)(s[l,i]*y[l]))/s[i,i], где i = 2,3,..,m*/
-    
-    vector <double> y(n + 1);
-    y.push_back(A[0][m - 1] / S[0][0] * D[0][0]);        //y[1] всегда равен f[1]/s[1,1]
-    for (int i = 1; i < n; ++i) {
-        double sum = 0;
-        for (int l = 0; l < i - 1; ++l)
-            sum = sum + S[l][i] * y[l] * D[l][l];
-        y.push_back((A[i][m - 1] - sum) / (S[i][i] * D[i][i]));
-    }
-    f << "Вектор y:" << endl;
-    cout << "Вектор y:" << endl;
-    for (int i = 0; i < n; ++i) {
-        cout.width(13);
-        cout << y[i] << ' ';
-        f.width(13);
-        f << y[i] << ' ';
-    }
-    cout << endl;
-    f << endl;
-
-    /*Используя значения y, найденные в предыдущем уравнении, решаем второе уравнение
-                                 (2) Sx = y
-       формула для нахождения x[i]
-            x[i] = (y[i] - sum(от l=1+1 до l=i)(s[i,l]*x[l]))/s[i,i], гдн i = i-1,i-2,..,1
-                                                                                            */
-    double* x = new double[n + 1];
-    x[n] = y[n] / S[n][n];           //Последний x[n] всегда равен u[n]/s[n,n]
-    for (int i = n - 1; i >= 1; --i) {
-        double sum = 0;
-        for (int l = i + 1; l <= n; ++l)
-            sum = sum + S[i][l] * x[l];
-        x[i] = (y[i] - sum) / S[i][i];
-    }
-    /*---------------------------------------Обратный ход--------------------------------------*/
-
-    //Выводим решения
-    f << endl << "Ответ" << endl;
-    cout << endl << "Ответ" << endl;
-    for (int i = 0; i < n; i++) {
-        f.width(13);
-        f << x[i] << ' ';
-        cout.width(13);
-        cout << x[i] << ' ';
-    }
-    f.close();
 }
+
+void print_vector(double* v, int n, ofstream& f) {
+    for (int j = 0; j < n; j++) {
+        cout.width(10);
+        cout << v[j] << endl;
+        f.width(10);
+        f << v[j] << endl;
+    }
+}
+
+void sqrt_method()
+{
+    int n;
+    cout << "n = ";
+    cin >> n;
+    double** a = new double* [n];
+    double** s = new double* [n];
+    double** s_t = new double* [n];
+    double** d = new double* [n];
+    for (int i = 0; i < n; i++) {
+        a[i] = new double[n];
+        s[i] = new double[n];
+        s_t[i] = new double[n];
+        d[i] = new double[n];
+    }
+    double* b = new double[n];
+    double* x = new double[n];
+    double* y = new double[n];
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            cout << "a[" << i << "][" << j << "] = ";
+            cin >> a[i][j];
+        }
+    }
+    for (int i = 0; i < n; i++) {
+        cout << "b[" << i << "] = ";
+        cin >> b[i];
+    }
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            if (i == 0 && j == 0) {
+                s[i][j] = sqrt(a[i][j]);
+            }
+            if (i == 0 && j > 0) {
+                s[0][j] = a[0][j] / s[0][0];
+            }
+            if (i == j && i != 0) {
+                double sum = 0;
+                for (int k = 0; k < i; k++) {
+                    sum += pow(s[k][i], 2);
+                }
+                s[i][i] = sqrt(a[i][i] - sum);
+            }
+            if (i > 0 && i < j) {
+                double sum = 0;
+                for (int k = 0; k < i; k++) {
+                    sum += s[k][i] * s[k][j];
+                }
+                s[i][j] = (a[i][j] - sum) / s[i][i];
+            }
+            if (i > 0 && i > j) {
+                s[i][j] = 0;
+            }
+        }
+    }
+
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            s_t[j][i] = s[i][j];
+        }
+    }
+
+    for (int i = 0; i < n; i++) {
+        if (i == 0) {
+            y[0] = b[0] / s[0][0];
+        }
+        if (i > 0) {
+            double sum = 0;
+            for (int k = 0; k < i; k++) {
+                sum += s[k][i] * y[k];
+            }
+            y[i] = (b[i] - sum) / s[i][i];
+        }
+    }
+
+    for (int i = n - 1; i >= 0; i--) {
+        if (i == n - 1) {
+            x[i] = y[i] / s[i][i];
+        }
+        if (i >= 0) {
+            double sum = 0;
+            for (int k = i + 1; k < n; k++) {
+                sum += s[i][k] * x[k];
+            }
+            x[i] = (y[i] - sum) / s[i][i];
+        }
+    }
+
+    ofstream f;
+    f.open("sqrt_method.txt");
+    cout << endl << "a" << endl;
+    f << endl << "a" << endl;
+    print_matr(a, n, f);
+    cout << endl << "s" << endl;
+    f << endl << "s" << endl;
+    print_matr(s, n, f);
+    cout << endl << "s_t" << endl;
+    f << endl << "s_t" << endl;
+    print_matr(s_t, n, f);
+    cout << endl << "y" << endl;
+    f << endl << "y" << endl;
+    print_vector(y, n, f);
+    cout << endl << "x" << endl;
+    f << endl << "x" << endl;
+    print_vector(x, n, f);
+}
+
 
 int main()
 {
@@ -287,7 +406,7 @@ int main()
 		{
 		case '1':
             system("cls");
-			LU_method();
+			LU();
 			system("cls");
 			cout << "СЛАУ решено методом LU разложением." << endl;
 			system("pause");
