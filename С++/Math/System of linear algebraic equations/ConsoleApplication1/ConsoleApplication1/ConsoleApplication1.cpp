@@ -44,13 +44,18 @@ void print_in_file(vector <vector <double>> A, int n, ofstream &f)
 		{
 			f.width(13);
 			f << A[i][j];
+            cout.width(13);
+            cout << A[i][j];
 		}
 		f << endl;
+        cout << endl;
 	}
 }
 
 void LU_method() {
-	int n = 4;
+	int n;
+    cout << "Введите размерность матрицы: ";
+    cin >> n;
 	vector <vector <double>> A(n), L(n), U(n), R(n);
 	for (int i = 0; i < n; i++)
 	{
@@ -69,13 +74,17 @@ void LU_method() {
 	f.open("LU-method.txt");
 	LU(A, L, U, n);
 	f << "Fisrt matrix" << endl;
+    cout << "Fisrt matrix" << endl;
 	print_in_file(A, n, f);
 	f << "U matrix" << endl;
+    cout << "U matrix" << endl;
 	print_in_file(U, n, f);
 	f << "L matrix" << endl;
+    cout << "L matrix" << endl;
 	print_in_file(L, n, f);
 	proisv(L, U, R, n);
 	f << "L*U matrix" << endl;
+    cout << "L*U matrix" << endl;
 	print_in_file(R, n, f);
     f.close();
 }
@@ -90,7 +99,8 @@ void sqrt_method() {
     ofstream f;
     f.open("sqrt_method.txt");
     int n, m;
-    n = 2;
+    cout << "Введите размерность матрицы: ";
+    cin >> n;
 
     m = n + 1;                      //Расширенная матрица
     //double** A = new double* [n + 1]; //Выделяем память под строки
@@ -105,18 +115,24 @@ void sqrt_method() {
             A[i].push_back(a);
         }
     }
-
+    system("cls");
     //Вывод на экран
     f << "Матрица A: " << endl;
+    cout << "Матрица A: " << endl;
+
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < m; j++) {
             if (j == m - 1) f << "|";
             f.width(13);
             f << A[i][j] << " ";
+            cout.width(13);
+            cout << A[i][j] << " ";
         }
         f << endl;
+        cout << endl;
     }
     f << endl;
+    cout << endl;
 
     /*    A = S*DS,
           S — верхняя треугольная матрица с положительными элементами на главной диагонали,
@@ -166,6 +182,7 @@ void sqrt_method() {
         цифр с ошибкой вычисления                                                       */
 
     f << "Главная диагональ матрицы D:" << endl;
+    cout << "Главная диагональ матрицы D:" << endl;
     for (int i = 0; i < n; i++)
         for (int j = 0; j < n; j++)
             if (abs(S[i][j]) < 0.000001) S[i][j] = 0;
@@ -173,18 +190,25 @@ void sqrt_method() {
     for (int i = 0; i < n; i++) {
         f.width(13);
         f << D[i][i] << " ";
+        cout.width(13);
+        cout << D[i][i] << " ";
     }
     f << endl;
+    cout << endl;
     f << "Полученная матрица S:" << endl;
+    cout << "Полученная матрица S:" << endl;
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) {
             f.width(13);
             f << S[i][j] << " ";
+            cout.width(13);
+            cout << S[i][j] << " ";
         }
-            
+        cout << endl;
         f << endl;
     }
     f << endl;
+    cout << endl;
 
 
     /*Итак, если после предыдущих действий имеем матрицу S. Чтобы довести решение
@@ -211,10 +235,14 @@ void sqrt_method() {
         y.push_back((A[i][m - 1] - sum) / (S[i][i] * D[i][i]));
     }
     f << "Вектор y:" << endl;
+    cout << "Вектор y:" << endl;
     for (int i = 0; i < n; ++i) {
+        cout.width(13);
+        cout << y[i] << ' ';
         f.width(13);
         f << y[i] << ' ';
     }
+    cout << endl;
     f << endl;
 
     /*Используя значения y, найденные в предыдущем уравнении, решаем второе уравнение
@@ -234,9 +262,12 @@ void sqrt_method() {
 
     //Выводим решения
     f << endl << "Ответ" << endl;
+    cout << endl << "Ответ" << endl;
     for (int i = 0; i < n; i++) {
         f.width(13);
         f << x[i] << ' ';
+        cout.width(13);
+        cout << x[i] << ' ';
     }
     f.close();
 }
@@ -264,8 +295,7 @@ int main()
 		case '2':
             system("cls");
             sqrt_method();
-            system("cls");
-            cout << "СЛАУ решено методом квадратного разложения разложением." << endl;
+            cout << endl << "СЛАУ решено методом квадратного разложения разложением." << endl;
             system("pause");
 			break;
 		case '0':
