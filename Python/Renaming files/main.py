@@ -17,7 +17,7 @@ def changes_files(list_names: list):
     count = 0
     len_list = len(list_names)
     for names in list_names:
-        shutil.move(names[0], names[1])
+        shutil.copy(names[0], names[1])
         count += 1
         print(f"Перемещено {count} из {len_list}")
 
