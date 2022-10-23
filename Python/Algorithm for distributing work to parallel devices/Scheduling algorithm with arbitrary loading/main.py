@@ -24,8 +24,7 @@ def step_2(matr: list) -> list:
 
     for index_line, line in enumerate(matr):
         min_index, min_num = min(list(enumerate(line)), key=lambda x: x[1])
-        if index_line + 1 < len(matr):
-            matr[index_line + 1][min_index] += min_num
+        sums[min_index] += min_num
     return sums
 
 
