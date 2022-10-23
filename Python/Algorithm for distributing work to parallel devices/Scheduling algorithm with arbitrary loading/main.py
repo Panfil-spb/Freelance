@@ -45,7 +45,7 @@ def main():
             [15, 7, 12],
             [13, 10, 8],
             [11, 16, 14]]
-    step_1(matr)
+    print(step_1(matr))
 
 
 if __name__ == '__main__':
