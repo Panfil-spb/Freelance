@@ -19,12 +19,23 @@ def matr_permutation(matr: list, incr: list) -> None:
                 matr[j], matr[j + 1] = matr[j + 1], matr[j]
 
 
+def print_matr(matr: list) -> None:
+    for line in matr:
+        print(line)
+
+
 def step_2(matr: list) -> list:
     sums = [0 for _ in matr[0]]
 
-    for index_line, line in enumerate(matr):
-        min_index, min_num = min(list(enumerate(line)), key=lambda x: x[1])
-        sums[min_index] += min_num
+    for i in range(len(matr)):
+
+        min_index, min_num = min(list(enumerate(matr[i])), key=lambda x: x[1] + sums[x[0]])
+
+        sums[min_index] += min_num - sums[min_index]
+        if i + 1 < len(matr):
+            for j in range(i + 1, len(matr)):
+                matr[j][min_index] += min_num
+
     return sums
 
 
@@ -32,6 +43,7 @@ def step_1(matr: list) -> int:
     incr = matr_increment(matr)
     matr_permutation(matr, incr)
     res = step_2(matr)
+    print(f'res: {" ".join(str(i) for i in res)}')
     return max(res)
 
 
